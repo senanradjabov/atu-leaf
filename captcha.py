@@ -7,6 +7,10 @@ from numpy import int0, uint8, array
 
 class Answer:
     def __init__(self, image_path: str, number_of_questions: int):
+        """
+        image_path - absolute path to the image
+        number_of_questions - number of questions
+        """
         self.image_path = image_path
         self.image = self.read_image()
 
@@ -40,7 +44,6 @@ class Answer:
 
     def get_full_data(self) -> dict:
         """Get Data About Student Id,  Option And Answers."""
-        # return self._student_id, self._option, self._list_of_answers
         return {
             "id": self._student_id,
             "option": self._option,
@@ -126,6 +129,7 @@ class Answer:
             4: "D",
             5: "E"
         }
+
         lst = self._find_coordinates_of_vertices(number_of_variation=5,
                                                  number_of_sections=50)
         if self.number_of_questions == 100:
