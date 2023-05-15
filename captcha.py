@@ -16,23 +16,23 @@ class Answer:
 
         self.number_of_questions = number_of_questions
 
-        self._image_correction()
-
         self.check_image = None
-
         if self.number_of_questions == 50:
             self.area = 2_600_00
+            self.image_size = (1425, 1890)
+            self._image_correction()
             self.student_id_image = self.image.copy()[265:635, 376:700]
             self.option_image = self.image.copy()[1372:1408, 428:644]
             self.answer_image_one = self.image.copy()[40:, 1145:]
-            self.image_size = (1425, 1890)
         elif self.number_of_questions == 100:
             self.area = 3_000_00
+            self.image_size = (1425, 1890)
+
+            self._image_correction()
             self.student_id_image = self.image.copy()[265:635, 376:700]
             self.option_image = self.image.copy()[1372:1408, 428:644]
             self.answer_image_one = self.image.copy()[40:, 1145:]
             self.answer_image_two = self.image.copy()[40:, 1145:]
-            self.image_size = (1425, 1890)
 
         self._option = None
         self._student_id = None
@@ -75,8 +75,7 @@ class Answer:
         lst = self._find_coordinates_of_vertices(number_of_variation=6,
                                                  number_of_sections=10)
         answers = self._data_about_circle(question_list=lst)
-
-        self._student_id = self._check_data_from_circle_for_student_id(answers, answers_dict, 480)
+        self._student_id = self._check_data_from_circle_for_student_id(answers, answers_dict, 260)
 
         res = ["#", "#", "#", "#", "#", "#"]
 
@@ -113,7 +112,7 @@ class Answer:
 
         answers = self._data_about_circle(question_list=lst)
 
-        self._option = self._check_data_from_circle(answers, answers_dict, 480)[0]
+        self._option = self._check_data_from_circle(answers, answers_dict, 260)[0]
 
         if self._option not in ('1', '2', '3', '4'):
             raise ValueError("Option isn't correct!")
@@ -121,6 +120,7 @@ class Answer:
     def answers_main(self) -> None:
         """Start Find Answers."""
         self.check_image = self.answer_image_one
+        cv2.imwrite("test.jpg", self.check_image)
 
         answers_dict = {
             1: "A",
@@ -140,12 +140,13 @@ class Answer:
 
         answers = self._data_about_circle(question_list=lst)
 
-        self._list_of_answers = self._check_data_from_circle(answers, answers_dict, 420)
+        self._list_of_answers = self._check_data_from_circle(answers, answers_dict, 260)
 
     def _find_coordinates_of_vertices(self,
                                       number_of_variation: int,
                                       number_of_sections: int) -> list:
-        """Построение координат и возвращение координат каждой секции
+        """
+        Построение координат и возвращение координат каждой секции
         number_of_variation => количество вариантов
         number_of_sections => количество секций
         """
@@ -160,8 +161,14 @@ class Answer:
             for j in range(number_of_variation):
                 start_coordinate = (width * j, y)
                 end_coordinate = (width * (j + 1), y + height)
+                cv2.rectangle(img=self.check_image, pt1=start_coordinate, pt2=end_coordinate,
+                              color=(200, 200, 200),
 
+                              # color=(51, 138, 74),
+                              thickness=2)
                 lst.append((start_coordinate, end_coordinate))
+
+        cv2.imwrite("test-3.jpg", self.check_image)
 
         return [lst[i * number_of_variation: (i + 1) * number_of_variation] for i in range(number_of_sections)]
 
