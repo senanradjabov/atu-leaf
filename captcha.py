@@ -4,8 +4,6 @@ from math import pi, acos
 
 from numpy import int0, uint8, array
 
-from pprint import pprint
-
 
 class Answer:
     def __init__(self, image_path: str, number_of_questions: int):
@@ -77,9 +75,6 @@ class Answer:
         lst = self._find_coordinates_of_vertices(number_of_variation=6,
                                                  number_of_sections=10)
         answers = self._data_about_circle(question_list=lst)
-
-        pprint(answers)
-
         _student_id = self._check_data_from_circle_for_student_id(answers, answers_dict, 420)
 
         res = ["#", "#", "#", "#", "#", "#"]
@@ -95,7 +90,6 @@ class Answer:
                     res[index] = str(i) if res[index] == "#" else "&"
             except ValueError:
                 pass
-
 
         try:
             self._student_id = int("".join(res))
