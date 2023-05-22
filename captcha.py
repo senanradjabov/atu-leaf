@@ -1,8 +1,10 @@
-from math import pi, acos
-
 import cv2
 
+from math import pi, acos
+
 from numpy import int0, uint8, array
+
+from pprint import pprint
 
 
 class Answer:
@@ -50,13 +52,13 @@ class Answer:
             "answers": self._list_of_answers
         }
 
-    def get_option(self):
+    def get_option(self) -> int:
         return self._option
 
-    def get_answers(self):
+    def get_answers(self) -> list:
         return self._list_of_answers
 
-    def get_student_id(self):
+    def get_student_id(self) -> int:
         return self._student_id
 
     def student_id_main(self) -> None:
@@ -75,11 +77,14 @@ class Answer:
         lst = self._find_coordinates_of_vertices(number_of_variation=6,
                                                  number_of_sections=10)
         answers = self._data_about_circle(question_list=lst)
-        self._student_id = self._check_data_from_circle_for_student_id(answers, answers_dict, 260)
+
+        pprint(answers)
+
+        _student_id = self._check_data_from_circle_for_student_id(answers, answers_dict, 420)
 
         res = ["#", "#", "#", "#", "#", "#"]
 
-        for i, elm in enumerate(self._student_id):
+        for i, elm in enumerate(_student_id):
             try:
                 if isinstance(elm, list):
                     for j in elm:
@@ -91,10 +96,12 @@ class Answer:
             except ValueError:
                 pass
 
+
         try:
             self._student_id = int("".join(res))
         except ValueError:
-            raise ValueError("ID isn't correct!!")
+            self._student_id = "ID isn't correct!!"
+            # raise ValueError("ID isn't correct!!")
 
     def option_main(self) -> None:
         """Start Find Option."""
@@ -112,15 +119,17 @@ class Answer:
 
         answers = self._data_about_circle(question_list=lst)
 
-        self._option = self._check_data_from_circle(answers, answers_dict, 260)[0]
+        result = self._check_data_from_circle(answers, answers_dict, 420)[0]
 
-        if self._option not in ('1', '2', '3', '4'):
-            raise ValueError("Option isn't correct!")
+        if result in ('1', '2', '3', '4'):
+            # raise ValueError("Option isn't correct!")
+            self._option = int(result)
+
+        self._option = "Option isn't correct!"
 
     def answers_main(self) -> None:
         """Start Find Answers."""
         self.check_image = self.answer_image_one
-        cv2.imwrite("test.jpg", self.check_image)
 
         answers_dict = {
             1: "A",
@@ -140,7 +149,7 @@ class Answer:
 
         answers = self._data_about_circle(question_list=lst)
 
-        self._list_of_answers = self._check_data_from_circle(answers, answers_dict, 260)
+        self._list_of_answers = self._check_data_from_circle(answers, answers_dict, 420)
 
     def _find_coordinates_of_vertices(self,
                                       number_of_variation: int,
@@ -163,12 +172,9 @@ class Answer:
                 end_coordinate = (width * (j + 1), y + height)
                 cv2.rectangle(img=self.check_image, pt1=start_coordinate, pt2=end_coordinate,
                               color=(200, 200, 200),
-
                               # color=(51, 138, 74),
                               thickness=2)
                 lst.append((start_coordinate, end_coordinate))
-
-        cv2.imwrite("test-3.jpg", self.check_image)
 
         return [lst[i * number_of_variation: (i + 1) * number_of_variation] for i in range(number_of_sections)]
 
@@ -198,7 +204,7 @@ class Answer:
         result = dict()
 
         for i, elm in enumerate(answers, 1):
-            s = list(filter(lambda x: x > pixel_number, elm))  # Выбор пикселей больше 690
+            s = list(filter(lambda x: x > pixel_number, elm))  # Выбор пикселей
             result[i] = answers_dict.get(elm.index(max(elm)) + 1)
 
             if len(s) >= 2:  # Проверка ответа на больше чем одного выбранного ответа
@@ -270,14 +276,14 @@ class Answer:
 
         raise ValueError("Don't find box!")
 
-    def _image_correction(self):
+    def _image_correction(self) -> None:
         """Исправление изображения"""
         hsv_min = array((0, 0, 0), uint8)
         hsv_max = array((0, 0, 60), uint8)
 
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-        # self.image = cv2.inRange(self.image, 160, 255)
-        self.customize_image = cv2.inRange(self.image, 235, 255)
+        self.image = cv2.inRange(self.image, 155, 255)
+        # self.image = cv2.inRange(self.image, 235, 255)
         self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
 
         hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)  # меняем цветовую модель с BGR на HSV
