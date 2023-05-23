@@ -17,17 +17,16 @@ class Answer:
         self.number_of_questions = number_of_questions
 
         self.check_image = None
+
+        self.area = 2_600_000
+        self.image_size = (1425, 1890)
+
         if self.number_of_questions == 50:
-            self.area = 2_600_00
-            self.image_size = (1425, 1890)
             self._image_correction()
             self.student_id_image = self.image.copy()[265:635, 376:700]
             self.option_image = self.image.copy()[1372:1408, 428:644]
             self.answer_image_one = self.image.copy()[40:, 1145:]
         elif self.number_of_questions == 100:
-            self.area = 3_000_00
-            self.image_size = (1425, 1890)
-
             self._image_correction()
             self.student_id_image = self.image.copy()[265:635, 376:700]
             self.option_image = self.image.copy()[1372:1408, 428:644]
@@ -94,11 +93,10 @@ class Answer:
         try:
             self._student_id = int("".join(res))
         except ValueError:
-            self._student_id = "ID isn't correct!!"
-            # raise ValueError("ID isn't correct!!")
+            self._student_id = None
 
     def option_main(self) -> None:
-        """Start Find Option."""
+        """Start Find Option. (36, 216)"""
         self.check_image = self.option_image
 
         answers_dict: dict = {
@@ -116,13 +114,10 @@ class Answer:
         result = self._check_data_from_circle(answers, answers_dict, 420)[0]
 
         if result in ('1', '2', '3', '4'):
-            # raise ValueError("Option isn't correct!")
             self._option = int(result)
 
-        self._option = "Option isn't correct!"
-
     def answers_main(self) -> None:
-        """Start Find Answers."""
+        """Start Find Answers. (1850, 280)"""
         self.check_image = self.answer_image_one
 
         answers_dict = {
@@ -284,7 +279,6 @@ class Answer:
         thresh = cv2.inRange(hsv, hsv_min, hsv_max)  # применяем цветовой фильтр
 
         angle, coordinate_box = self._find_contours(thresh)
-
         lst = list(sorted(coordinate_box, key=lambda x: sum(x)))
 
         angle = angle - 90 if lst[0][0] < lst[2][0] else 90 - angle
