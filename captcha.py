@@ -4,6 +4,9 @@ from math import pi, acos
 
 from numpy import int0, uint8, array
 
+from pprint import pprint
+from sys import exit
+
 
 class Answer:
     def __init__(self, image_path: str, number_of_questions: int):
@@ -25,7 +28,7 @@ class Answer:
             self._image_correction()
             self.student_id_image = self.image.copy()[265:635, 376:700]
             self.option_image = self.image.copy()[1372:1408, 428:644]
-            self.answer_image_one = self.image.copy()[40:, 1145:]
+            self.answer_image_one = self.image.copy()[36:, 1142:]
         elif self.number_of_questions == 100:
             self._image_correction()
             self.student_id_image = self.image.copy()[265:635, 376:700]
@@ -73,8 +76,9 @@ class Answer:
 
         lst = self._find_coordinates_of_vertices(number_of_variation=6,
                                                  number_of_sections=10)
-        answers = self._data_about_circle(question_list=lst)
-        _student_id = self._check_data_from_circle_for_student_id(answers, answers_dict, 420)
+        data = self._data_about_circle(question_list=lst)
+        # pprint(data)
+        _student_id = self._check_data_from_circle_for_student_id(data, answers_dict, 444)
 
         res = ["#", "#", "#", "#", "#", "#"]
 
@@ -109,9 +113,9 @@ class Answer:
         lst = self._find_coordinates_of_vertices(number_of_variation=4,
                                                  number_of_sections=1)
 
-        answers = self._data_about_circle(question_list=lst)
-
-        result = self._check_data_from_circle(answers, answers_dict, 420)[0]
+        data = self._data_about_circle(question_list=lst)
+        # pprint(data)
+        result = self._check_data_from_circle(data, answers_dict, 444)[0]
 
         if result in ('1', '2', '3', '4'):
             self._option = int(result)
@@ -130,15 +134,18 @@ class Answer:
 
         lst = self._find_coordinates_of_vertices(number_of_variation=5,
                                                  number_of_sections=50)
+
         if self.number_of_questions == 100:
             self.check_image = self.answer_image_two
 
             lst += self._find_coordinates_of_vertices(number_of_variation=5,
                                                       number_of_sections=50)
 
-        answers = self._data_about_circle(question_list=lst)
-
-        self._list_of_answers = self._check_data_from_circle(answers, answers_dict, 420)
+        cv2.imwrite(f"ans-{self.image_path.rsplit('/')[-1]}", self.check_image)
+        data = self._data_about_circle(question_list=lst)
+        # pprint(data)
+        # exit()
+        self._list_of_answers = self._check_data_from_circle(data, answers_dict, 444)
 
     def _find_coordinates_of_vertices(self,
                                       number_of_variation: int,
@@ -271,22 +278,22 @@ class Answer:
         hsv_max = array((0, 0, 60), uint8)
 
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-        self.image = cv2.inRange(self.image, 155, 255)
-        # self.image = cv2.inRange(self.image, 235, 255)
+        self.image = cv2.inRange(self.image, 185, 255)
         self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
 
         hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)  # меняем цветовую модель с BGR на HSV
         thresh = cv2.inRange(hsv, hsv_min, hsv_max)  # применяем цветовой фильтр
 
         angle, coordinate_box = self._find_contours(thresh)
+
         lst = list(sorted(coordinate_box, key=lambda x: sum(x)))
 
         angle = angle - 90 if lst[0][0] < lst[2][0] else 90 - angle
 
         if round(angle, 2) >= 0.1:
-            rot = self._rotate_image(angle)
+            self.image = self._rotate_image(angle)
 
-            hsv = cv2.cvtColor(rot, cv2.COLOR_BGR2HSV)  # меняем цветовую модель с BGR на HSV
+            hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)  # меняем цветовую модель с BGR на HSV
             thresh = cv2.inRange(hsv, hsv_min, hsv_max)  # применяем цветовой фильтр
 
             _, coordinate_box = self._find_contours(thresh)
@@ -296,3 +303,4 @@ class Answer:
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
         self.image = cv2.resize(self.image, self.image_size)
+        # cv2.imwrite(f"v1-{self.image_path.rsplit('/')[-1]}", self.image)
