@@ -4,8 +4,8 @@ from math import pi, acos
 
 from numpy import int0, uint8, array
 
-from pprint import pprint
-from sys import exit
+# from pprint import pprint
+# from sys import exit
 
 
 class Answer:
@@ -141,7 +141,7 @@ class Answer:
             lst += self._find_coordinates_of_vertices(number_of_variation=5,
                                                       number_of_sections=50)
 
-        cv2.imwrite(f"ans-{self.image_path.rsplit('/')[-1]}", self.check_image)
+        # cv2.imwrite(f"ans-{self.image_path.rsplit('/')[-1]}", self.check_image)
         data = self._data_about_circle(question_list=lst)
         # pprint(data)
         # exit()
