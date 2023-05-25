@@ -4,9 +4,6 @@ from math import pi, acos
 
 from numpy import int0, uint8, array
 
-# from pprint import pprint
-# from sys import exit
-
 
 class Answer:
     def __init__(self, image_path: str, number_of_questions: int):
@@ -23,6 +20,7 @@ class Answer:
 
         self.area = 2_600_000
         self.image_size = (1425, 1890)
+        self.pixel_limit = 444
 
         if self.number_of_questions == 50:
             self._image_correction()
@@ -74,11 +72,9 @@ class Answer:
             6: "6"
         }
 
-        lst = self._find_coordinates_of_vertices(number_of_variation=6,
-                                                 number_of_sections=10)
+        lst = self._find_coordinates_of_vertices(number_of_variation=6, number_of_sections=10)
         data = self._data_about_circle(question_list=lst)
-        # pprint(data)
-        _student_id = self._check_data_from_circle_for_student_id(data, answers_dict, 444)
+        _student_id = self._check_data_from_circle_for_student_id(data, answers_dict)
 
         res = ["#", "#", "#", "#", "#", "#"]
 
@@ -110,12 +106,9 @@ class Answer:
             4: "4",
         }
 
-        lst = self._find_coordinates_of_vertices(number_of_variation=4,
-                                                 number_of_sections=1)
-
+        lst = self._find_coordinates_of_vertices(number_of_variation=4, number_of_sections=1)
         data = self._data_about_circle(question_list=lst)
-        # pprint(data)
-        result = self._check_data_from_circle(data, answers_dict, 444)[0]
+        result = self._check_data_from_circle(data, answers_dict)[0]
 
         if result in ('1', '2', '3', '4'):
             self._option = int(result)
@@ -132,20 +125,15 @@ class Answer:
             5: "E"
         }
 
-        lst = self._find_coordinates_of_vertices(number_of_variation=5,
-                                                 number_of_sections=50)
+        lst = self._find_coordinates_of_vertices(number_of_variation=5, number_of_sections=50)
 
         if self.number_of_questions == 100:
             self.check_image = self.answer_image_two
 
-            lst += self._find_coordinates_of_vertices(number_of_variation=5,
-                                                      number_of_sections=50)
+            lst += self._find_coordinates_of_vertices(number_of_variation=5, number_of_sections=50)
 
-        # cv2.imwrite(f"ans-{self.image_path.rsplit('/')[-1]}", self.check_image)
         data = self._data_about_circle(question_list=lst)
-        # pprint(data)
-        # exit()
-        self._list_of_answers = self._check_data_from_circle(data, answers_dict, 444)
+        self._list_of_answers = self._check_data_from_circle(data, answers_dict)
 
     def _find_coordinates_of_vertices(self,
                                       number_of_variation: int,
@@ -157,7 +145,6 @@ class Answer:
         """
         height = int(self.check_image.shape[0] / number_of_sections)
         width = int(self.check_image.shape[1] / number_of_variation)
-
         lst = list()
 
         for i in range(1, number_of_sections + 1):
@@ -166,9 +153,7 @@ class Answer:
             for j in range(number_of_variation):
                 start_coordinate = (width * j, y)
                 end_coordinate = (width * (j + 1), y + height)
-                cv2.rectangle(img=self.check_image, pt1=start_coordinate, pt2=end_coordinate,
-                              color=(200, 200, 200),
-                              # color=(51, 138, 74),
+                cv2.rectangle(img=self.check_image, pt1=start_coordinate, pt2=end_coordinate, color=(200, 200, 200),
                               thickness=2)
                 lst.append((start_coordinate, end_coordinate))
 
@@ -194,13 +179,12 @@ class Answer:
 
         return data
 
-    @staticmethod
-    def _check_data_from_circle(answers: list, answers_dict: dict, pixel_number: int) -> list:
+    def _check_data_from_circle(self, answers: list, answers_dict: dict) -> list:
         """Получение ответа из данных"""
         result = dict()
 
         for i, elm in enumerate(answers, 1):
-            s = list(filter(lambda x: x > pixel_number, elm))  # Выбор пикселей
+            s = list(filter(lambda x: x > self.pixel_limit, elm))  # Выбор пикселей
             result[i] = answers_dict.get(elm.index(max(elm)) + 1)
 
             if len(s) >= 2:  # Проверка ответа на больше чем одного выбранного ответа
@@ -211,13 +195,12 @@ class Answer:
 
         return list(result.values())
 
-    @staticmethod
-    def _check_data_from_circle_for_student_id(answers: list, answers_dict: dict, pixel_number: int) -> list:
+    def _check_data_from_circle_for_student_id(self, answers: list, answers_dict: dict) -> list:
         """Получение ответа из данных"""
         result = dict()
 
         for i, elm in enumerate(answers, 1):
-            s = list(filter(lambda x: x > pixel_number, elm))  # Выбор пикселей больше 690
+            s = list(filter(lambda x: x > self.pixel_limit, elm))  # Выбор пикселей больше 690
             result[i] = answers_dict.get(elm.index(max(elm)) + 1)
 
             if len(s) >= 2:  # Проверка ответа на больше чем одного выбранного ответа
@@ -244,8 +227,7 @@ class Answer:
         contours = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
 
         # Нахождение максимальной площади
-        all_area = [int(cv2.minAreaRect(i)[1][0] * cv2.minAreaRect(i)[1][1]) for i in contours]
-        max_area = max(all_area)
+        max_area = max([int(cv2.minAreaRect(i)[1][0] * cv2.minAreaRect(i)[1][1]) for i in contours])
 
         # Перебираем все найденные контуры в цикле
         for cnt in contours:
@@ -285,17 +267,13 @@ class Answer:
         thresh = cv2.inRange(hsv, hsv_min, hsv_max)  # применяем цветовой фильтр
 
         angle, coordinate_box = self._find_contours(thresh)
-
         lst = list(sorted(coordinate_box, key=lambda x: sum(x)))
-
         angle = angle - 90 if lst[0][0] < lst[2][0] else 90 - angle
 
         if round(angle, 2) >= 0.1:
             self.image = self._rotate_image(angle)
-
             hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)  # меняем цветовую модель с BGR на HSV
             thresh = cv2.inRange(hsv, hsv_min, hsv_max)  # применяем цветовой фильтр
-
             _, coordinate_box = self._find_contours(thresh)
             lst = list(sorted(coordinate_box, key=lambda x: sum(x)))
 
@@ -303,4 +281,3 @@ class Answer:
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
         self.image = cv2.resize(self.image, self.image_size)
-        # cv2.imwrite(f"v1-{self.image_path.rsplit('/')[-1]}", self.image)
