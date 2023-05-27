@@ -12,7 +12,7 @@ class Answer:
         number_of_questions - number of questions
         """
         self.image_path = image_path
-        self.image = self.read_image()
+        self.image = cv2.imread(self.image_path)
 
         self.number_of_questions = number_of_questions
 
@@ -26,41 +26,40 @@ class Answer:
             self._image_correction()
             self.student_id_image = self.image.copy()[265:635, 376:700]
             self.option_image = self.image.copy()[1372:1408, 428:644]
-            self.answer_image_one = self.image.copy()[36:, 1142:]
+            self.answer_image_one = self.image.copy()[36:1886, 1142:1422]  # 1850 280
         elif self.number_of_questions == 100:
             self._image_correction()
-            self.student_id_image = self.image.copy()[265:635, 376:700]
-            self.option_image = self.image.copy()[1372:1408, 428:644]
-            self.answer_image_one = self.image.copy()[40:, 1145:]
-            self.answer_image_two = self.image.copy()[40:, 1145:]
+            self.student_id_image = self.image.copy()[265:635, 186:510]  # 370 324
+            self.option_image = self.image.copy()[1372:1408, 238:454]  # 36 216
+            self.answer_image_one = self.image.copy()[36:1886, 800:1080]  # 1389 1142
+            self.answer_image_two = self.image.copy()[36:1886, 1145:1422]
 
         self._option = None
         self._student_id = None
         self._list_of_answers = None
 
-    def read_image(self):
-        """Чтение листка"""
-        return cv2.imread(self.image_path)
-
     def get_full_data(self) -> dict:
-        """Get Data About Student Id,  Option And Answers."""
+        """Get Data About Student Id, Option And Answers."""
         return {
             "id": self._student_id,
             "option": self._option,
             "answers": self._list_of_answers
         }
 
+    def get_student_id(self) -> int:
+        """Get Student Id."""
+        return self._student_id
+
     def get_option(self) -> int:
+        """Get Option."""
         return self._option
 
     def get_answers(self) -> list:
+        """Get Answers."""
         return self._list_of_answers
 
-    def get_student_id(self) -> int:
-        return self._student_id
-
     def student_id_main(self) -> None:
-        """Find Student ID. (370, 324) (высоты, ширина)"""
+        """Find Student ID."""
         self.check_image = self.student_id_image
 
         answers_dict: dict = {
@@ -96,7 +95,7 @@ class Answer:
             self._student_id = None
 
     def option_main(self) -> None:
-        """Start Find Option. (36, 216)"""
+        """Start Find Option."""
         self.check_image = self.option_image
 
         answers_dict: dict = {
@@ -114,7 +113,7 @@ class Answer:
             self._option = int(result)
 
     def answers_main(self) -> None:
-        """Start Find Answers. (1850, 280)"""
+        """Start Find Answers."""
         self.check_image = self.answer_image_one
 
         answers_dict = {
@@ -126,13 +125,14 @@ class Answer:
         }
 
         lst = self._find_coordinates_of_vertices(number_of_variation=5, number_of_sections=50)
+        data = self._data_about_circle(question_list=lst)
 
         if self.number_of_questions == 100:
             self.check_image = self.answer_image_two
 
-            lst += self._find_coordinates_of_vertices(number_of_variation=5, number_of_sections=50)
+            lst = self._find_coordinates_of_vertices(number_of_variation=5, number_of_sections=50)
+            data += self._data_about_circle(question_list=lst)
 
-        data = self._data_about_circle(question_list=lst)
         self._list_of_answers = self._check_data_from_circle(data, answers_dict)
 
     def _find_coordinates_of_vertices(self,
@@ -160,7 +160,7 @@ class Answer:
         return [lst[i * number_of_variation: (i + 1) * number_of_variation] for i in range(number_of_sections)]
 
     def _data_about_circle(self, question_list: list) -> list:
-        """Получение данных из секций"""
+        """Получение данных из секций."""
         data = list()
 
         for ans in question_list:
@@ -180,7 +180,7 @@ class Answer:
         return data
 
     def _check_data_from_circle(self, answers: list, answers_dict: dict) -> list:
-        """Получение ответа из данных"""
+        """Получение ответа из данных."""
         result = dict()
 
         for i, elm in enumerate(answers, 1):
@@ -196,7 +196,7 @@ class Answer:
         return list(result.values())
 
     def _check_data_from_circle_for_student_id(self, answers: list, answers_dict: dict) -> list:
-        """Получение ответа из данных"""
+        """Получение ответа из данных."""
         result = dict()
 
         for i, elm in enumerate(answers, 1):
@@ -214,7 +214,7 @@ class Answer:
         return list(result.values())
 
     def _rotate_image(self, angle):
-        """Вращение изображения"""
+        """Вращение изображения."""
         height, width = self.image.shape[:2]  # Высота и ширина
         point = width // 2, height // 2  # Точка вращения
         mat = cv2.getRotationMatrix2D(point, angle, 1)  # Матрица вращения
@@ -222,7 +222,7 @@ class Answer:
         return cv2.warpAffine(self.image, mat, (width, height))
 
     def _find_contours(self, thresh) -> tuple:
-        """Нахождение прямоугольника"""
+        """Нахождение прямоугольника."""
         # Нахождение всех контуров
         contours = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
 
@@ -255,7 +255,7 @@ class Answer:
         raise ValueError("Don't find box!")
 
     def _image_correction(self) -> None:
-        """Исправление изображения"""
+        """Исправление изображения."""
         hsv_min = array((0, 0, 0), uint8)
         hsv_max = array((0, 0, 60), uint8)
 
